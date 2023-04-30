@@ -4,10 +4,18 @@ from typing import List
 from urllib.request import urlopen
 import json
 from pathlib import Path
+import os
 from bs4 import BeautifulSoup
 
-URLS = json.loads(Path("data/urls.json").read_text(encoding="UTF-8"))["urls_for_scraping"]
-KEYWORDS = (Path("data") / "keywords.txt").read_text().split("\n")  # careful not to end file with blank line.
+urls_file = os.path.join(os.path.dirname(__file__), "data\\urls.json")
+keywords_path = os.path.join(os.path.dirname(__file__), "data\\keywords.txt")
+
+with open(urls_file) as f:
+    URLS = json.load(f)["urls_for_scraping"]
+
+with open(keywords_path, "r", encoding="utf-8") as f:
+    KEYWORDS = f.read().split("\n")
+# KEYWORDS = (keywords_path).read_text().split("\n")  # careful not to end file with blank line.
 
 @dataclass
 class ScrapedData:
