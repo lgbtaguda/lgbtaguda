@@ -1,5 +1,9 @@
 from dataclasses import dataclass
 
+from src.scraping.file_parsing import read_pdf
+from src.scraping.knesset import parse_knesset
+from src.scraping.tools import scrape
+
 
 @dataclass
 class BECallable:
