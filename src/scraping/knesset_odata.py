@@ -18,17 +18,25 @@ class KnessetOdata:
         return {cmt.CommitteeID: cmt.Name for cmt in res}
 
     def get_committee_session_ids_by_filter(self,
-                                           committee_id=None,
-                                           start_date: datetime.datetime = None,
-                                           end_date: datetime.datetime = None) -> List[int]:
+                                            committee_id=None,
+                                            from_date: datetime.datetime = None,
+                                            to_date: datetime.datetime = None) -> List[int]:
         filters_list = []
         if committee_id:
-            filters_list += f'CommitteeID eq {committee_id}'
+            filters_list.append(f'CommitteeID eq {committee_id}')
+        if from_date:
+            filters_list.append(f"StartDate gt datetime'{from_date}'")
+        if to_date:
+            filters_list.append(f"EndDate lt datetime'{to_date}'")
+        filter_str = ' and '.join(filters_list)
+        print(filter_str)
 
     def get_documents_by_session_id(self, session_id: int) -> List[ScrapedData]:
         pass
 
+
 if __name__ == '__main__':
     knesset_data = KnessetOdata()
-    knesset_data.get_committee_session_ids_by_filter()
-    print(knesset_data.get_committees())
+    # knesset_data.get_committee_session_ids_by_filter(committee_id=991)
+    knesset_data.get_committee_session_ids_by_filter(committee_id=991, start_date=datetime.datetime.now())
+    # print(knesset_data.get_committees())
