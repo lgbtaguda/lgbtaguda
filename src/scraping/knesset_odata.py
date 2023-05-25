@@ -32,11 +32,13 @@ class KnessetOdata:
         print(filter_str)
 
     def get_documents_by_session_id(self, session_id: int) -> List[ScrapedData]:
-        pass
-
+        res = self.client.entity_sets.KNS_DocumentCommitteeSession.get_entities().filter(
+            f'CommitteeSessionID eq {session_id}').execute()
+        links = [cmtid.FilePath for cmtid in res]
+        print(links)
 
 if __name__ == '__main__':
     knesset_data = KnessetOdata()
-    # knesset_data.get_committee_session_ids_by_filter(committee_id=991)
-    knesset_data.get_committee_session_ids_by_filter(committee_id=991, start_date=datetime.datetime.now())
-    # print(knesset_data.get_committees())
+    print(knesset_data.get_documents_by_session_id(2205205))
+
+
