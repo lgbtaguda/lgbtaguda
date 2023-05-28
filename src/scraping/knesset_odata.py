@@ -38,8 +38,7 @@ class KnessetOdata:
         links = [cmtid.FilePath for cmtid in res]
         print(links)
 
+
 if __name__ == '__main__':
     knesset_data = KnessetOdata()
     print(knesset_data.get_documents_by_session_id(2205205))
-
-
