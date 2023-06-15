@@ -1,6 +1,8 @@
 import openai
 
-import api_keys
+from data import api_keys
+
+prompt = "with Yes No only - does the text contain any resolution or suggestion that might affect lgbtq people? "
 
 
 def ask_if_affects_lgbt(text):
@@ -11,7 +13,7 @@ def ask_if_affects_lgbt(text):
         messages=[
             {"role": "system", "content": "You are a chatbot"},
             {"role": "user",
-             "content": "with Yes No only - does the text contain any resolution or suggestion that might affect lgbtq people?"
+             "content": "with Yes No only - does the text contain any resolution or suggestion that might affect lgbtq people? Start your answer with yes or no."
                         +
                         text
 
@@ -23,8 +25,8 @@ def ask_if_affects_lgbt(text):
     for choice in response.choices:
         result += choice.message.content
 
-    print(result)
-
+    # print(result)
+    return result
 
 if __name__ == "__main__":
     # text = '''

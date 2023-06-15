@@ -2,10 +2,10 @@ from datetime import datetime
 from urllib.request import urlopen
 
 from bs4 import BeautifulSoup
-from requests_html import HTMLSession
-from selenium import webdriver
+from requests_html import AsyncHTMLSession
+# from selenium import webdriver
 
-from src.common import ScrapedData
+from common import ScrapedData
 
 
 def scrape(url: str) -> ScrapedData:
@@ -35,18 +35,22 @@ def scrape(url: str) -> ScrapedData:
 #     def get(self, url):
 #         self.response = self.session.get(url)
 
-def render_js(url):
-    session = HTMLSession()
-    response = session.get(url)
-    response.html.render()
+async def render_js(url):
+    # session = HTMLSession()
+    session = AsyncHTMLSession()
+    response = await session.get(url)
+    # response.html.render()
+    await response.html.arender()
     return response.html
 
 
-def scrape_aspx(url):
+async def scrape_aspx(url):
     # Create an HTML session and render the JavaScript code
-    session = HTMLSession()
-    response = session.get(url)
-    response.html.render()
+    # session = HTMLSession()
+    session = AsyncHTMLSession()
+
+    response = await session.get(url)
+    await response.html.arender()
 
     # Find all the URLs in the rendered HTML
     urls = [link for link in response.html.links if link.startswith('http')]
@@ -57,21 +61,21 @@ def scrape_aspx(url):
 user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
 
 
-def parse_chrome(url):
-    # driver = webdriver.Chrome()
-    options = webdriver.ChromeOptions()
-
-    options.add_argument("--enable-javascript")
-    options.add_argument(f'user-agent={user_agent}')
-
-    driver = webdriver.Chrome(chrome_options=options)
-    driver.get(url)
-    driver.current_url
-    htmlSource = driver.page_source
-    print(1)
+# def parse_chrome(url):
+#     # driver = webdriver.Chrome()
+#     options = webdriver.ChromeOptions()
+#
+#     options.add_argument("--enable-javascript")
+#     options.add_argument(f'user-agent={user_agent}')
+#
+#     driver = webdriver.Chrome(chrome_options=options)
+#     driver.get(url)
+#     driver.current_url
+#     htmlSource = driver.page_source
+#     print(1)
 
 
 if __name__ == '__main__':
-    parse_chrome('https://main.knesset.gov.il/about/departments/pages/sg/sgpresidium.aspx')
+    # parse_chrome('https://main.knesset.gov.il/about/departments/pages/sg/sgpresidium.aspx')
     res = scrape_aspx(
         "https://www.gov.il/he/Departments/publications/?OfficeId=e744bba9-d17e-429f-abc3-50f7a8a55667&blockCollector=true&limit=10&publicationType=06311039-a4dc-4457-af46-a8e7dbfbe5a0&skip=0")

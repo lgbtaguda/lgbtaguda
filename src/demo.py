@@ -1,39 +1,27 @@
 import streamlit as st
-import requests
-import json
-# from scraping import scrape_aspx, scrape, fetch
-# from summarize import load_model, summarize
-# from find_by_key import parse_key_words
-
-default_url = "https://www.gov.il/he/Departments/policies?OfficeId=e744bba9-d17e-429f-abc3-50f7a8a55667&blockCollector=true&limit=10&PmoMinistersComittee=a0d9709c-f07d-4b0e-8c48-0939643eb020&skip=0"
-# with open('secrets/tokens.json', 'r') as f:
-#    tokens = json.load(f)
-#    api_token = tokens['HF']
+from scraping.tools import scrape_aspx
+from common import URLS, KEYWORDS
+from chatbot import ask_if_affects_lgbt
 
 
-keywords = [
-"הומו",
-"הומואים",
-"הקהילה הגאה",
-"התאמה מגדרית",
-"טיפול המרה",
-"טיפולי המרה",
-"טרנסג'נדר",
-'להט"ב'
-"לסביות",
-"לסבית",
-"נטיות הפוכות",
-"פונדקאות",
-"קהילה גאה",
-"שינוי מין",
-    "נשים"
-]
-
-scrape_url = False
+scrape_url = None
 search_kw = False
-summarize = False
+gpt = False
 
-# Using "with" notation
+
+def choose_url_to_scrape():
+    form_name = "url_form"
+    url = st.sidebar.selectbox(
+        "בחרו אתר לחיפוש טקסטים",
+        ("choose option", "knesset", "gov.il", "load PDF/DOCX", "other URL")
+    )
+    if url != "choose option":
+            if url in ["load PDF/DOCX", "other URL"]:
+                url = st.text_input('insert url...')
+            scrape_url = st.form_submit_button("Submit")
+    return form_name, url, scrape_url
+
+
 with st.sidebar:
     with st.form("url_form"):
         url = st.sidebar.selectbox(
@@ -41,31 +29,29 @@ with st.sidebar:
             ("choose option", "knesset", "gov.il", "load PDF/DOCX", "other URL")
         )
         if url != "choose option":
-            if url in ["load PDF/DOCX", "other URL"]:
-                st.write('insert url...')
-                url = st.text_input('insert url...')
-            submitted = st.form_submit_button("Submit")
-            if submitted:
-                scrape_url = True
+                if url in ["load PDF/DOCX", "other URL"]:
+                    st.write('insert url...')
+                    url = st.text_input('insert url...')
+                scrape_url = st.form_submit_button("Submit")
 
     with st.form("text_form"):
         text_input = st.text_area('הכניסו טקסט')
 
         submitted_text = st.form_submit_button("search keywords")
-        submit_to_summarize = st.form_submit_button("summarize_text")
+        submit_to_gpt = st.form_submit_button("is this text offensive? ask ChatGPT   ")
         if submitted_text:
             search_kw = True
-        if submit_to_summarize:
-            summarize = True
+        if submit_to_gpt:
+            gpt = True
 
 
 def is_relevant(text, kwords):
-    paragraphs = text.split("\n ")
+    paragraphs = text.split("\n")
     for paragraph in paragraphs:
         text_to_print = ""
         is_para_relevant = False
         for sentence in paragraph.split('. '):
-            if any(k in text for k in kwords):
+            if any(k in sentence for k in kwords):
                 text_to_print += f"<b>{sentence}</b>. "
                 is_para_relevant = True
             else:
@@ -75,31 +61,34 @@ def is_relevant(text, kwords):
             st.write(f'this text contains lgbtq relevant text: ')
             st.markdown(text_to_print + "\n", unsafe_allow_html=True)
 
-model_name = "google/mt5-small"
-# model_name = "csebuetnlp/mT5_multilingual_XLSum"
+
+# @st.cache
+async def get_scraped_links(url):
+    list_of_urls = await scrape_aspx(url)
+    return list_of_urls
+
 
 def main():
-
     st.title('זיהוי נושאים להטבים בהחלטות ממשלה')
     if scrape_url:
-        st.write(url)
+        if url == "knesset":
+            hakika_url = URLS['hakika']
+            urls = get_scraped_links(hakika_url)
+            print(urls)
+            st.write(urls)
     if text_input:
         if search_kw:
             # keywords = parse_key_words().split("\n")
-            is_relevant(text_input, keywords)
-        elif summarize:
-            st.subheader('summary')
-            summary = summarize(tokenizer, model, text=text_input)
-            st.write(summary)
-
+            is_relevant(text_input, KEYWORDS)
+        elif gpt:
+            st.write(text_input[:200] +"...")
+            st.markdown("**האם יש בטקסט זה כדי להשפיע על הקהילה הגאה?**")
+            is_offensive = ask_if_affects_lgbt(text_input[:4000])
+            print(is_offensive)
+            st.write(is_offensive)
 
 
 if __name__ == '__main__':
-    placeholder = st.empty()
-    placeholder.text("wait while model is loading...")
-    # model, tokenizer = load_model(model_name)
-
-    placeholder.text('model loaded')
-
-
+    model_name = "google/mt5-small"
+    # model_name = "csebuetnlp/mT5_multilingual_XLSum"
     main()
